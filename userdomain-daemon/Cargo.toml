@@ -1,0 +1,27 @@
+[package]
+name = "userdomain-daemon"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+userdomain-common = { path = "../userdomain-common", features = ["user"] }
+
+anyhow.workspace = true
+aya.workspace = true
+dbus = { workspace = true, features = ["futures"] }
+dbus-crossroads.workspace = true
+libc.workspace = true
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "signal"] }
+dbus-tokio.workspace = true
+
+[build-dependencies]
+userdomain-ebpf = { path = "../userdomain-ebpf" }
+
+anyhow.workspace = true
+aya-build.workspace = true
+cargo_metadata.workspace = true
+
+[[bin]]
+name = "userdomain-daemon"
+path = "src/main.rs"

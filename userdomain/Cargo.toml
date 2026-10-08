@@ -1,0 +1,10 @@
+[package]
+name = "userdomain"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+argh.workspace = true
+dbus.workspace = true
