@@ -1,0 +1,15 @@
+[package]
+name = "userdomain-nss"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+dbus.workspace = true
+
+[build-dependencies]
+bindgen.workspace = true
+
+[lib]
+name = "nss_userdomain"
+crate-type = ["cdylib"]

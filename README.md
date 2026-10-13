@@ -10,45 +10,54 @@ This project makes use of [aya]((https://aya-rs.dev/book/)) for building eBPF
 program with only rust code. If you encounter any difficulty, you may find
 their [documentation]((https://aya-rs.dev/book/)) helpful.
 
-## Building
+## Prerequisites
 
-1. Install required prerequisites by following aya's instructions at
-   [Development Environment](https://aya-rs.dev/book/start/development.html).
-   There is no need to install `cargo-generate` since you are not generating a
-   new project.
+Follow aya's instructions at [Development
+Environment](https://aya-rs.dev/book/start/development.html). There is no need
+to install `cargo-generate` since you are not generating a new project.
 
-2. Compile the project in the usual way using cargo:
+## Installation
+
+This project provides a convenient Makefile that bundle together both the
+compilation and installation step:
 
 ```shell
-$ cargo build
+$ make && sudo make install
 ```
 
-## Example Usage
+Alternatively, it is also possible compile the project directly with cargo and
+perform the installation on your own:
+
+```shell
+$ cargo build --profile release
+```
+
+## Command Line Usage
 
   - Running the service (This required root permission or relevant capabilities)
 
      ```shell
-     $ ./target/<profile>/userdomain-daemon
+     $ sudo userdomain-daemon
      ```
 
   - Creating a new service with appropriate port redirection:
 
      ```shell
-     $ ./target/<profile>/userdomain create <name> 80:8080
+     $ userdomain create <name> 80:8080
      <address>
      ```
 
   - **(Optional)** Resolve the created service (TODO: nss module):
 
      ```shell
-     $ ./target/<profile>/userdomain resolve <name>.localhost
+     $ userdomain resolve <name>.localhost
      <address>
      ```
 
   - **(Optional)** Reverse resolve the created service (TODO: nss module):
 
      ```shell
-     $ ./target/<profile>/userdomain reverse-resolve <address>
+     $ userdomain reverse-resolve <address>
      <name>.localhost
      ```
 
@@ -67,8 +76,34 @@ $ cargo build
   - Remove the service
 
      ```shell
-     $ ./target/<profile>/userdomain remove <address>
+     $ userdomain remove <address>
      ```
+
+### Name Service Switch (NSS)
+
+This project also provides a nss module that allows you to override domain
+lookup globally. If you followed the above installation procedure, a dynamic
+library would be installed under /usr/local/lib/libnss_userdomain.so.2.
+Depending on your system, it may be necessary update the linker cache by:
+
+```shell
+$ sudo ldconfig /usr/local/lib
+```
+
+It is also necessary to configure /etc/nsswitch.conf. For example, prepend to
+the hosts line such that it changes from:
+
+```
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+```
+
+to:
+
+```
+hosts: userdomain [!UNAVAIL=return] mymachines resolve [!UNAVAIL=return] files myhostname dns
+```
+
+such that our installed uss module is used.
 
 ## Security
 

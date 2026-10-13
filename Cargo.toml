@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["userdomain", "userdomain-daemon", "userdomain-common", "userdomain-ebpf"]
-default-members = ["userdomain", "userdomain-daemon", "userdomain-common"]
+members = ["userdomain", "userdomain-daemon", "userdomain-common", "userdomain-ebpf", "userdomain-nss"]
+default-members = ["userdomain", "userdomain-daemon", "userdomain-common", "userdomain-nss"]
 
 [workspace.package]
 license = "MIT"
@@ -13,6 +13,7 @@ argh = "0.1.19"
 aya = "0.14.0"
 aya-build = "0.2.0"
 aya-ebpf = "0.2.1"
+bindgen = "0.73.2"
 cargo_metadata = "0.23.1"
 dbus = "0.9.12"
 dbus-crossroads = "0.5.3"
