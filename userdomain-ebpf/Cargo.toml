@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 aya-ebpf.workspace = true
+aya-log-ebpf.workspace = true
 network-types.workspace = true
 userdomain-common = { path = "../userdomain-common" }
 

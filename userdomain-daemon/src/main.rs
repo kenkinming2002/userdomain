@@ -4,9 +4,11 @@ use std::{collections::{HashMap, HashSet}, ffi::CStr, mem, net::Ipv4Addr, sync::
 
 use anyhow::{Context as _, Result, bail};
 use aya::{Ebpf, maps::{HashMap as EbpfHashMap, MapData}, programs::{SchedClassifier, tc::{self, SchedClassifierLinkId, TcAttachType}}};
+use aya_log::EbpfLogger;
 use dbus::{MethodErr, channel::MatchingReceiver, message::MatchRule, nonblock::{Proxy, SyncConnection, stdintf::org_freedesktop_dbus::RequestNameReply}, strings::BusName};
 use dbus_crossroads::Crossroads;
 use dbus_tokio::connection;
+use tokio::{io::{Interest, unix::AsyncFd}, task};
 use userdomain_common::{Addr, REDIR_MAX, Spec};
 
 const MIN_LOOPBACK_ADDRESS: Addr = Addr(Ipv4Addr::new(127, 0, 0, 2));
@@ -46,6 +48,16 @@ impl UserDomain {
         let _ = tc::qdisc_add_clsact("lo");
 
         let mut ebpf = aya::Ebpf::load(aya::include_bytes_aligned!(concat!(env!("OUT_DIR"), "/userdomain")))?;
+
+        let logger = EbpfLogger::init_with_logger(&mut ebpf, env_logger::builder().build()).unwrap();
+        let mut logger = AsyncFd::with_interest(logger, Interest::READABLE).unwrap();
+        task::spawn(async move {
+            loop {
+                let mut guard = logger.readable_mut().await.unwrap();
+                guard.get_inner_mut().flush();
+                guard.clear_ready();
+            }
+        });
 
         let program: &mut SchedClassifier = ebpf.program_mut("ingress").unwrap().try_into()?;
         program.load()?;

@@ -8,12 +8,14 @@ license.workspace = true
 userdomain-common = { path = "../userdomain-common", features = ["user"] }
 
 anyhow.workspace = true
+aya-log.workspace = true
 aya.workspace = true
 dbus = { workspace = true, features = ["futures"] }
 dbus-crossroads.workspace = true
+dbus-tokio.workspace = true
+env_logger.workspace = true
 libc.workspace = true
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "signal"] }
-dbus-tokio.workspace = true
 
 [build-dependencies]
 userdomain-ebpf = { path = "../userdomain-ebpf" }

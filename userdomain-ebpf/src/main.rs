@@ -3,15 +3,16 @@
 
 #![feature(try_blocks)]
 
-use core::{ffi::CStr, mem};
+use core::mem;
 
-use aya_ebpf::{bindings::{BPF_F_MARK_MANGLED_0, TC_ACT_OK, TC_ACT_SHOT}, bpf_printk, macros::{classifier, map}, maps::HashMap, programs::TcContext};
+use aya_ebpf::{bindings::{BPF_F_MARK_MANGLED_0, TC_ACT_OK, TC_ACT_SHOT}, macros::{classifier, map}, maps::HashMap, programs::TcContext};
+use aya_log_ebpf::warn;
 use network_types::{eth::{EthHdr, EtherType}, ip::{IpProto, Ipv4Hdr}, tcp::TcpHdr, udp::UdpHdr};
 use userdomain_common::{Addr, REDIR_MAX, Spec};
 
 #[unsafe(link_section = "license")]
 #[unsafe(no_mangle)]
-static LICENSE: [u8; 13] = *b"Dual MIT/GPL\0";
+static LICENSE: [u8; 4] = *b"MIT\0";
 
 #[cfg(not(test))]
 #[panic_handler]
@@ -20,8 +21,8 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 }
 
 /// Shot down packet because we have reached code that is supposed unreachable.
-fn shot_unreachable(reason: &CStr) {
-    unsafe { bpf_printk!(c"userdomain-postrouting: unreachable: %s: dropping packet", reason.as_ptr()); }
+fn shot_unreachable(reason: &str) {
+    warn!(&(), "userdomain-postrouting: unreachable: {}: dropping packet", reason);
 }
 
 struct Loader<'a> {
@@ -35,7 +36,7 @@ impl<'a> Loader<'a> {
     }
 }
 impl Loader<'_> {
-    fn load<T>(&mut self, reason: &CStr) -> Result<T, ()> {
+    fn load<T>(&mut self, reason: &str) -> Result<T, ()> {
         let value = self.ctx.load(self.offset).map_err(|_| shot_unreachable(reason))?;
         self.offset += mem::size_of::<T>();
         Ok(value)
@@ -74,9 +75,9 @@ pub fn ingress(ctx: TcContext) -> i32 { fold_result(try {
     // Entry //
     ///////////
     let mut loader = Loader::new(&ctx);
-    let ethhdr: EthHdr = loader.load(c"incomplete ethernet header")?;
+    let ethhdr: EthHdr = loader.load("incomplete ethernet header")?;
     if ethhdr.ether_type() != Ok(EtherType::Ipv4) { return TC_ACT_OK }
-    let iphdr: Ipv4Hdr = loader.load(c"incomplete internet header")?;
+    let iphdr: Ipv4Hdr = loader.load("incomplete internet header")?;
 
     ////////////////////////////
     // NAT - Rewrite Dst Port //
@@ -90,14 +91,14 @@ pub fn ingress(ctx: TcContext) -> i32 { fold_result(try {
             let flags;
             match iphdr.proto() {
                 Ok(IpProto::Tcp) => {
-                    let tcphdr: TcpHdr = loader.load(c"incomplete tcp header")?;
+                    let tcphdr: TcpHdr = loader.load("incomplete tcp header")?;
                     csum_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(TcpHdr, check);
                     port_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(TcpHdr, dest);
                     old_port = tcphdr.dest;
                     flags = 0;
                 },
                 Ok(IpProto::Udp) => {
-                    let udphdr: UdpHdr = loader.load(c"incomplete udp header")?;
+                    let udphdr: UdpHdr = loader.load("incomplete udp header")?;
                     csum_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(UdpHdr, check);
                     port_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(UdpHdr, dst);
                     old_port = udphdr.dst;
@@ -125,9 +126,9 @@ pub fn egress(ctx: TcContext) -> i32 { fold_result(try {
     // Entry //
     ///////////
     let mut loader = Loader::new(&ctx);
-    let ethhdr: EthHdr = loader.load(c"incomplete ethernet header")?;
+    let ethhdr: EthHdr = loader.load("incomplete ethernet header")?;
     if ethhdr.ether_type() != Ok(EtherType::Ipv4) { return TC_ACT_OK }
-    let iphdr: Ipv4Hdr = loader.load(c"incomplete internet header")?;
+    let iphdr: Ipv4Hdr = loader.load("incomplete internet header")?;
 
     //////////////
     // Firewall //
@@ -159,14 +160,14 @@ pub fn egress(ctx: TcContext) -> i32 { fold_result(try {
             let flags;
             match iphdr.proto() {
                 Ok(IpProto::Tcp) => {
-                    let tcphdr: TcpHdr = loader.load(c"incomplete tcp header")?;
+                    let tcphdr: TcpHdr = loader.load("incomplete tcp header")?;
                     csum_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(TcpHdr, check);
                     port_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(TcpHdr, source);
                     old_port = tcphdr.source;
                     flags = 0;
                 },
                 Ok(IpProto::Udp) => {
-                    let udphdr: UdpHdr = loader.load(c"incomplete udp header")?;
+                    let udphdr: UdpHdr = loader.load("incomplete udp header")?;
                     csum_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(UdpHdr, check);
                     port_offset = mem::size_of_val(&ethhdr) + mem::size_of_val(&iphdr) + mem::offset_of!(UdpHdr, src);
                     old_port = udphdr.src;
