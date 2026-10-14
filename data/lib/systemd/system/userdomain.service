@@ -1,0 +1,13 @@
+[Unit]
+Description=Userdomain Daemon
+
+[Service]
+Type=dbus
+BusName=org.UserDomain
+ExecStart=userdomain-daemon
+User=userdomain-daemon
+Group=userdomain-daemon
+AmbientCapabilities=CAP_BPF CAP_NET_ADMIN CAP_PERFMON
+
+[Install]
+WantedBy=multi-user.target
