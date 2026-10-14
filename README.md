@@ -47,14 +47,14 @@ $ cargo build --profile release
      <address>
      ```
 
-  - **(Optional)** Resolve the created service (TODO: nss module):
+  - **(Optional)** Resolve the created service:
 
      ```shell
      $ userdomain resolve <name>.localhost
      <address>
      ```
 
-  - **(Optional)** Reverse resolve the created service (TODO: nss module):
+  - **(Optional)** Reverse resolve the created service:
 
      ```shell
      $ userdomain reverse-resolve <address>
