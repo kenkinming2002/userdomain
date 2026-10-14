@@ -132,5 +132,6 @@ redirection. This is not a concern because:
 ## Licensing
 
 This project is licensed under the MIT license. However, that may not or may
-not (I am not a lawyer) include the eBPF code under [userdomain-ebpf/] subject
-*only* in addition to the requirement on eBPF code licensing from linux kernel.
+not (I am not a lawyer) include the eBPF code under
+[userdomain-ebpf](userdomain-ebpf) subject *only* in addition to the
+requirement on eBPF code licensing from linux kernel.
