@@ -105,6 +105,15 @@ hosts: userdomain [!UNAVAIL=return] mymachines resolve [!UNAVAIL=return] files m
 
 such that our installed uss module is used.
 
+## Systemd Service
+
+This project comes with a systemd service. After installation, you could enable
+the service with:
+
+```shell
+$ systemctl enable userdomain.service
+```
+
 ## Security
 
 ### Priviledged port
