@@ -100,8 +100,8 @@ impl UserDomain {
             spec.redirs[spec.redir_count as usize].port_to = port_to.to_be_bytes();
             spec.redir_count += 1;
         }
-        self.spec_map.insert(address, spec, BPF_NOEXIST)?;
 
+        self.spec_map.insert(address, spec, BPF_NOEXIST)?; // NOTE: This may fail as BPF map have limited capacity
         let new = self.forward_map.entry((sender.name.clone(), name.clone())).or_default().insert(address); assert!(new);
         let new = self.backward_map.insert(address, (sender.name, name)).is_none();                         assert!(new);
 
@@ -116,6 +116,7 @@ impl UserDomain {
 
         let removed = self.forward_map.get_mut(&(sender.name.clone(), name.clone())).unwrap().remove(&address); assert!(removed);
         let removed = self.backward_map.remove(&address).is_some();                                             assert!(removed);
+        self.spec_map.remove(&address).unwrap();
 
         Ok(())
     }
