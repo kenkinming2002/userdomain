@@ -89,7 +89,6 @@ impl UserDomain {
 
         let address = self.next_address;
         if address == MAX_LOOPBACK_ADDRESS { bail!("loopback addresses exhuasted") }
-        self.next_address.0 = Ipv4Addr::from_bits(self.next_address.0.to_bits() + 1);
 
         let mut spec: Spec = unsafe { mem::zeroed() };
         spec.uid = sender.id;
@@ -105,6 +104,7 @@ impl UserDomain {
         let new = self.forward_map.entry((sender.name.clone(), name.clone())).or_default().insert(address); assert!(new);
         let new = self.backward_map.insert(address, (sender.name, name)).is_none();                         assert!(new);
 
+        self.next_address.0 = Ipv4Addr::from_bits(self.next_address.0.to_bits() + 1);
         Ok((address.0.to_bits(),))
     }
 
