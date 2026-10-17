@@ -18,7 +18,6 @@ const BPF_NOEXIST: u64 = 1;
 
 struct UserDomain {
     #[allow(dead_code)] ebpf: Ebpf,
-    #[allow(dead_code)] ingress_link: SchedClassifierLinkId,
     #[allow(dead_code)] egress_link: SchedClassifierLinkId,
 
     spec_map: EbpfHashMap<MapData, Addr, Spec>,
@@ -59,10 +58,6 @@ impl UserDomain {
             }
         });
 
-        let program: &mut SchedClassifier = ebpf.program_mut("ingress").unwrap().try_into()?;
-        program.load()?;
-        let ingress_link = program.attach(&iface, TcAttachType::Ingress)?;
-
         let program: &mut SchedClassifier = ebpf.program_mut("egress").unwrap().try_into()?;
         program.load()?;
         let egress_link = program.attach(&iface, TcAttachType::Egress)?;
@@ -74,7 +69,6 @@ impl UserDomain {
 
         Ok(Self {
             ebpf,
-            ingress_link,
             egress_link,
             spec_map,
             forward_map,

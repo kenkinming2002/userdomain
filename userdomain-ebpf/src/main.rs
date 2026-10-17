@@ -70,7 +70,7 @@ fn fold_result(res: Result<i32, ()>) -> i32 {
 static SPEC_MAP: HashMap<Addr, Spec> = HashMap::with_max_entries(1024, 0);
 
 #[classifier]
-pub fn ingress(ctx: TcContext) -> i32 { fold_result(try {
+pub fn egress(ctx: TcContext) -> i32 { fold_result(try {
     ///////////
     // Entry //
     ///////////
@@ -79,12 +79,26 @@ pub fn ingress(ctx: TcContext) -> i32 { fold_result(try {
     if ethhdr.ether_type() != Ok(EtherType::Ipv4) { return TC_ACT_OK }
     let iphdr: Ipv4Hdr = loader.load("incomplete internet header")?;
 
-    ////////////////////////////
-    // NAT - Rewrite Dst Port //
-    ////////////////////////////
-    {
-        let addr = Addr(iphdr.dst_addr());
-        if let Some(spec) = unsafe { SPEC_MAP.get(&addr)} {'rewrite:{
+    /////////
+    // Dst //
+    /////////
+    if let Some(spec) = unsafe { SPEC_MAP.get(&Addr(iphdr.dst_addr()))} {
+        //////////////
+        // Firewall //
+        //////////////
+        if spec.uid != ctx.get_socket_uid() {
+            // NOTE: This is maybe suboptimal because we simply drop the packet
+            //       without any response. For example, if a tcp connection is to be
+            //       established, it will simply backoff exponentially until it
+            //       timeout, which is less then efficient. A way to work around
+            //       this is to use netfilter instead of tc.
+            return TC_ACT_SHOT;
+        }
+
+        ////////////////////////////
+        // NAT - Rewrite Dst Port //
+        ////////////////////////////
+        'rewrite:{
             let csum_offset;
             let port_offset;
             let old_port;
@@ -111,49 +125,18 @@ pub fn ingress(ctx: TcContext) -> i32 { fold_result(try {
                 ctx.l4_csum_replace(csum_offset, u16::from_ne_bytes(old_port) as u64, u16::from_ne_bytes(new_port) as u64, flags | mem::size_of::<u16>() as u64).map_err(|_| ())?;
                 ctx.store(port_offset, &new_port, 0).map_err(|_| ())?;
             }
-        }}
-    }
-
-    /////////////
-    // Default //
-    /////////////
-    TC_ACT_OK
-})}
-
-#[classifier]
-pub fn egress(ctx: TcContext) -> i32 { fold_result(try {
-    ///////////
-    // Entry //
-    ///////////
-    let mut loader = Loader::new(&ctx);
-    let ethhdr: EthHdr = loader.load("incomplete ethernet header")?;
-    if ethhdr.ether_type() != Ok(EtherType::Ipv4) { return TC_ACT_OK }
-    let iphdr: Ipv4Hdr = loader.load("incomplete internet header")?;
-
-    //////////////
-    // Firewall //
-    //////////////
-    {
-        let addr = Addr(iphdr.dst_addr());
-        if let Some(spec) = unsafe { SPEC_MAP.get(&addr)} {
-            let uid = ctx.get_socket_uid();
-            if spec.uid != uid {
-                // NOTE: This is maybe suboptimal because we simply drop the packet
-                //       without any response. For example, if a tcp connection is to be
-                //       established, it will simply backoff exponentially until it
-                //       timeout, which is less then efficient. A way to work around
-                //       this is to use netfilter instead of tc.
-                return TC_ACT_SHOT;
-            }
         }
     }
 
-    ////////////////////////////
-    // NAT - Rewrite Src Port //
-    ////////////////////////////
-    {
-        let addr = Addr(iphdr.src_addr());
-        if let Some(spec) = unsafe { SPEC_MAP.get(&addr)} {'rewrite:{
+
+    /////////
+    // Src //
+    /////////
+    if let Some(spec) = unsafe { SPEC_MAP.get(&Addr(iphdr.src_addr()))} {
+        ////////////////////////////
+        // NAT - Rewrite Src Port //
+        ////////////////////////////
+        'rewrite:{
             let csum_offset;
             let port_offset;
             let old_port;
@@ -180,7 +163,7 @@ pub fn egress(ctx: TcContext) -> i32 { fold_result(try {
                 ctx.l4_csum_replace(csum_offset, u16::from_ne_bytes(old_port) as u64, u16::from_ne_bytes(new_port) as u64, flags | mem::size_of::<u16>() as u64).map_err(|_| ())?;
                 ctx.store(port_offset, &new_port, 0).map_err(|_| ())?;
             }
-        }}
+        }
     }
 
     /////////////
