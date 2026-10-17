@@ -133,6 +133,18 @@ pub fn egress(ctx: TcContext) -> i32 { fold_result(try {
     // Src //
     /////////
     if let Some(spec) = unsafe { SPEC_MAP.get(&Addr(iphdr.src_addr()))} {
+        //////////////
+        // Firewall //
+        //////////////
+        if spec.uid != ctx.get_socket_uid() {
+            // NOTE: This is maybe suboptimal because we simply drop the packet
+            //       without any response. For example, if a tcp connection is to be
+            //       established, it will simply backoff exponentially until it
+            //       timeout, which is less then efficient. A way to work around
+            //       this is to use netfilter instead of tc.
+            return TC_ACT_SHOT;
+        }
+
         ////////////////////////////
         // NAT - Rewrite Src Port //
         ////////////////////////////
