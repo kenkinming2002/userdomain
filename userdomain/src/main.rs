@@ -22,7 +22,7 @@ enum SubCommand {
     ReverseResolve(SubCommandReverseResolve),
 }
 
-/// Create user domain of the form "<name>.<username>.localhost".
+/// Create user domain of the form "<name>.<username>.local".
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "create")]
 struct SubCommandCreate {

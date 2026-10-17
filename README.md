@@ -1,7 +1,7 @@
 # userdomain
 
 Userdomain is a system service that allows each user to registered for local
-domain name of the form `<name>.localhost` with port redirections to
+domain name of the form `<name>.local` with port redirections to
 priviledged port that is isolated from each other using eBPF technology.
 
 ## Aya
@@ -50,7 +50,7 @@ $ cargo build --profile release
   - **(Optional)** Resolve the created service:
 
      ```shell
-     $ userdomain resolve <name>.localhost
+     $ userdomain resolve <name>.local
      <address>
      ```
 
@@ -58,7 +58,7 @@ $ cargo build --profile release
 
      ```shell
      $ userdomain reverse-resolve <address>
-     <name>.localhost
+     <name>.local
      ```
 
   - Run netcat server

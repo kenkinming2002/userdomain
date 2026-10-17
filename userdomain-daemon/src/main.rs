@@ -119,9 +119,9 @@ impl UserDomain {
         let mut components = domain.split('.');
 
         let name = components.next().context("missing name component")?;
-        let localhost = components.next().context("missing localhost component")?;
+        let local = components.next().context("missing .local component")?;
         if components.next().is_some() { bail!("too many components") }
-        if localhost != "localhost" { bail!("third component is not localhost") }
+        if local != "local" { bail!("third component is not .local") }
 
         self.forward_map
             .get(&(sender.name.to_owned(), name.to_owned()))
@@ -133,7 +133,7 @@ impl UserDomain {
         let address = Addr(Ipv4Addr::from_bits(address));
         let (user_name, name) = self.backward_map.get(&address).context("address not registered")?;
         if user_name != &sender.name { bail!("address not registered") /* be opaque about error */ }
-        Ok((format!("{name}.localhost"),))
+        Ok((format!("{name}.local"),))
     }
 }
 

@@ -108,7 +108,7 @@ pub unsafe extern "C" fn _nss_userdomain_gethostbyname3_r(name: *const c_char, a
     //
     // We response with nss_status::UNAVAIL to allow lookup to continue.
     let Ok(domain) = domain.to_str() else { nss_return!(0, 0, UNAVAIL) };
-    if !domain.ends_with(".localhost") { nss_return!(0, 0, UNAVAIL) }
+    if !domain.ends_with(".local") { nss_return!(0, 0, UNAVAIL) }
 
     // Check if we support the af.
     //
@@ -168,7 +168,7 @@ pub unsafe extern "C" fn _nss_userdomain_gethostbyname4_r(name: *const c_char, p
     //
     // We response with nss_status::UNAVAIL to allow lookup to continue.
     let Ok(domain) = domain.to_str() else { nss_return!(0, 0, UNAVAIL) };
-    if !domain.ends_with(".localhost") { nss_return!(0, 0, UNAVAIL) }
+    if !domain.ends_with(".local") { nss_return!(0, 0, UNAVAIL) }
 
     // Try to connect to dbus service.
     //
