@@ -31,3 +31,12 @@ install:
 	echo -e "\033[0;32mInfo:\033[0m It is a good time to configure nsswitch.conf(5) if you have not already."; \
 	echo -e "\033[0;32mInfo:\033[0m See README.md for more details."; \
 	echo -e "\033[0;32mInfo:\033[0m"; \
+
+.PHONY: uninstall
+uninstall:
+	-rm -f "$(PREFIX)/bin/userdomain-daemon"
+	-rm -f "$(PREFIX)/bin/userdomain"
+	-rm -f "$(PREFIX)/lib/libnss_userdomain.so.2"
+	-rm -f "$(PREFIX)/lib/systemd/system/userdomain.service"
+	-rm -f "$(PREFIX)/lib/sysusers.d/userdomain-daemon.conf"
+	-rm -f "$(PREFIX)/share/dbus-1/system.d/org.UserDomain.conf"
